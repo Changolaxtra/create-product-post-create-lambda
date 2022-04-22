@@ -6,6 +6,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import dan.rojas.epam.html.ProductHtmlPage;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -19,6 +21,8 @@ import java.util.Optional;
 
 public class CreateProductPostProcessorHandler implements RequestHandler<DynamodbEvent, Void> {
 
+  private static final Logger logger = LoggerFactory.getLogger(CreateProductPostProcessorHandler.class);
+
   public static final String INSERT = "INSERT";
   public static final String UPDATE = "MODIFY";
   private final S3Client s3Client;
@@ -29,9 +33,8 @@ public class CreateProductPostProcessorHandler implements RequestHandler<Dynamod
 
   @Override
   public Void handleRequest(DynamodbEvent dynamodbEvent, Context context) {
-    System.out.println(dynamodbEvent);
-
-    Optional.ofNullable(dynamodbEvent)
+    logger.info(dynamodbEvent.toString());
+    Optional.of(dynamodbEvent)
         .map(DynamodbEvent::getRecords)
         .orElse(new ArrayList<>())
         .stream()
@@ -42,7 +45,7 @@ public class CreateProductPostProcessorHandler implements RequestHandler<Dynamod
   }
 
   private Document processStreamRecord(final DynamodbEvent.DynamodbStreamRecord dynamodbStreamRecord) {
-    System.out.println("DynamodbStreamRecord -> " + dynamodbStreamRecord);
+    logger.info("DynamodbStreamRecord -> " + dynamodbStreamRecord);
     final Map<String, AttributeValue> newImage = dynamodbStreamRecord.getDynamodb().getNewImage();
     Document document = null;
     if (Objects.nonNull(newImage)) {
@@ -66,7 +69,7 @@ public class CreateProductPostProcessorHandler implements RequestHandler<Dynamod
   }
 
   private void uploadDocument(final Document document) {
-    System.out.println("Uploading the webpage to S3");
+    logger.info("Uploading the webpage to S3");
     s3Client.putObject(PutObjectRequest.builder().bucket(S3Constants.BUKET_NAME)
         .key(S3Constants.PRODUCTS_HTML_KEY).build(), RequestBody.fromString(document.toString(),
         StandardCharsets.UTF_8));

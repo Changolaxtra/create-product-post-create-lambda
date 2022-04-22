@@ -5,6 +5,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -15,6 +17,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ProductHtmlPage {
+
+  private static final Logger logger = LoggerFactory.getLogger(ProductHtmlPage.class);
 
   private static final String MAIN_CLASS = "container-md";
   private static final String IMG = "img";
@@ -38,7 +42,7 @@ public class ProductHtmlPage {
       "</div>";
 
   public static Document appendNewItem(final S3Client s3Client, final Map<String, String> item) {
-    System.out.println("Creating HTML Element for " + getId(item));
+    logger.info("Creating HTML Element for " + getId(item));
     final String htmlToAppend =
         String.format(htmlTemplate, getId(item), item.get(PICTURE_URL),
             item.get(ID), item.get(NAME), item.get(PRICE));
@@ -51,7 +55,7 @@ public class ProductHtmlPage {
   }
 
   public static Document updateExistingItem(final S3Client s3Client, final Map<String, String> item) {
-    System.out.println("Updating HTML Element for " + getId(item));
+    logger.info("Updating HTML Element for " + getId(item));
     final Document productsDocument = getPageFromS3(s3Client);
     final Element productToUpdate = productsDocument.getElementById(getId(item));
     Optional.ofNullable(productToUpdate)
@@ -67,7 +71,7 @@ public class ProductHtmlPage {
   }
 
   private static Document getPageFromS3(final S3Client s3Client) {
-    System.out.println("Getting file from S3...");
+    logger.info("Getting file from S3...");
     final ResponseBytes<GetObjectResponse> response = s3Client.getObject(
         GetObjectRequest.builder().bucket(S3Constants.BUKET_NAME).key(S3Constants.PRODUCTS_HTML_KEY).build(),
         ResponseTransformer.toBytes());
@@ -85,14 +89,14 @@ public class ProductHtmlPage {
                                              final String tag,
                                              final String attrKey,
                                              final String attrValue) {
-    System.out.println("Updating HTML Element " + tag + ":" + attrKey + " with " + attrValue);
+    logger.info("Updating HTML Element " + tag + ":" + attrKey + " with " + attrValue);
     Optional.of(root.getElementsByTag(tag))
         .map(Elements::first)
         .ifPresent(imageElement -> imageElement.attr(attrKey, attrValue));
   }
 
   private static void updateElementText(final Element root, final String tag, final String text) {
-    System.out.println("Updating HTML Element " + tag + " with "+ text);
+    logger.info("Updating HTML Element " + tag + " with "+ text);
     Optional.of(root.getElementsByTag(tag))
         .map(Elements::first)
         .ifPresent(pElement -> pElement.text(text));

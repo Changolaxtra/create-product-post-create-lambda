@@ -38,7 +38,6 @@ public class CreateProductPostProcessorHandler implements RequestHandler<Dynamod
         .findFirst()
         .map(this::processStreamRecord)
         .ifPresent(this::uploadDocument);
-
     return null;
   }
 

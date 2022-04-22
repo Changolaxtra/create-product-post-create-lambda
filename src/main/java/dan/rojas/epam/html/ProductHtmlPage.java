@@ -17,6 +17,15 @@ import java.util.Optional;
 public class ProductHtmlPage {
 
   private static final String MAIN_CLASS = "container-md";
+  private static final String IMG = "img";
+  private static final String SRC = "src";
+  private static final String PICTURE_URL = "pictureUrl";
+  private static final String DIV = "div";
+  private static final String SPAN = "span";
+  private static final String PRICE = "price";
+  private static final String ID = "id";
+  private static final String NAME = "name";
+
   private static final String htmlTemplate = "<div class=\"col\">" +
       "<div id=\"%s\" class=\"card\" style=\"width: 18rem;\">\n" +
       "    <img src=\"%s\" class=\"card-img-top\">\n" +
@@ -31,8 +40,8 @@ public class ProductHtmlPage {
   public static Document appendNewItem(final S3Client s3Client, final Map<String, String> item) {
     System.out.println("Creating HTML Element for " + getId(item));
     final String htmlToAppend =
-        String.format(htmlTemplate, getId(item), item.get("pictureUrl"),
-            item.get("id"), item.get("name"), item.get("price"));
+        String.format(htmlTemplate, getId(item), item.get(PICTURE_URL),
+            item.get(ID), item.get(NAME), item.get(PRICE));
 
     final Document productsDocument = getPageFromS3(s3Client);
     productsDocument.getElementsByClass(MAIN_CLASS)
@@ -47,11 +56,11 @@ public class ProductHtmlPage {
     final Element productToUpdate = productsDocument.getElementById(getId(item));
     Optional.ofNullable(productToUpdate)
         .ifPresent(productElement -> {
-          updateElementAttribute(productElement, "img", "src", item.get("pictureUrl"));
-          Optional.of(productElement.getElementsByTag("div"))
+          updateElementAttribute(productElement, IMG, SRC, item.get(PICTURE_URL));
+          Optional.of(productElement.getElementsByTag(DIV))
               .map(Elements::first)
               .ifPresent(divCardElement -> {
-                updateElementText(divCardElement, "span", "$ "+item.get("price"));
+                updateElementText(divCardElement, SPAN, "$ "+item.get(PRICE));
               });
         });
     return productsDocument;
